@@ -1,0 +1,30 @@
+---
+groups:
+  - name: lab
+    rules:
+      - alert: CibleInjoignable
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} injoignable sur {{ $labels.instance }}"
+          description: "Prometheus n'arrive plus à lire la cible {{ $labels.job }} depuis plus d'une minute."
+
+      - alert: MemoireElevee
+        expr: 100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RAM utilisée à {{ $value | humanize }} % sur {{ $labels.instance }}"
+          description: "La mémoire utilisée dépasse 85 % depuis 5 minutes."
+
+      - alert: DisqueBientotPlein
+        expr: 100 * (1 - node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disque / rempli à {{ $value | humanize }} % sur {{ $labels.instance }}"
+          description: "Le système de fichiers racine dépasse 80 % d'utilisation."

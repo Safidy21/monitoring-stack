@@ -1,6 +1,7 @@
 name: monitoring
 
 services:
+
   prometheus:
     image: prom/prometheus:v3.13.5
     container_name: prometheus
@@ -10,12 +11,16 @@ services:
       - --storage.tsdb.retention.time=15d
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - prometheus-data:/prometheus
     ports:
       - "9090:9090"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
+    depends_on:
+      - alertmanager
+
 
   node-exporter:
     image: prom/node-exporter:v1.12.1
@@ -27,6 +32,7 @@ services:
     volumes:
       - /:/host:ro,rslave
     restart: unless-stopped
+
 
   cadvisor:
     image: ghcr.io/google/cadvisor:0.60.6
@@ -41,6 +47,7 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
     restart: unless-stopped
+
 
   grafana:
     image: grafana/grafana:13.2.5
@@ -59,6 +66,22 @@ services:
       - prometheus
     restart: unless-stopped
 
+
+  alertmanager:
+    image: prom/alertmanager:v0.34.1
+    container_name: alertmanager
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    ports:
+      - "9093:9093"
+    restart: unless-stopped
+
+
 volumes:
   prometheus-data:
   grafana-data:
+  alertmanager-data:
