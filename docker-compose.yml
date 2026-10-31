@@ -64,6 +64,7 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
+      - alloy
     restart: unless-stopped
 
 
@@ -81,7 +82,39 @@ services:
     restart: unless-stopped
 
 
+  loki:
+    image: grafana/loki:3.7.9
+    container_name: loki
+    command:
+      - -config.file=/etc/loki/loki.yml
+    volumes:
+      - ./loki/loki.yml:/etc/loki/loki.yml:ro
+      - loki-data:/loki
+    restart: unless-stopped
+
+
+  alloy:
+    image: grafana/alloy:v1.21.2
+    container_name: alloy
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy-data:/var/lib/alloy/data
+    ports:
+      - "12345:12345"
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+
 volumes:
   prometheus-data:
   grafana-data:
   alertmanager-data:
+  loki-data:
+  alloy-data:
