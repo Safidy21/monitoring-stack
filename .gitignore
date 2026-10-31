@@ -1,0 +1,7 @@
+# Secrets
+.env
+*.key
+*.pem
+
+# Notes personnelles (préparation d'entretien)
+NOTES.md
