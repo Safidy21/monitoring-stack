@@ -13,10 +13,10 @@ d'applications : métriques des machines et des conteneurs, logs centralisés,
 alertes.
 
 L'objectif est d'appliquer à cette stack les bonnes pratiques de travail :
-- **tout en code** : sources de données et dashboards Grafana provisionnés par fichiers, rien n'est configuré à la souris ;
-- **chaque composant validé par son propre outil** (promtool, amtool, loki, alloy) ;
-- **des alertes testées** : une panne simulée doit déclencher l'alerte au bon moment ;
-- **une CI GitHub Actions** sur chaque Pull Request, et une branche `main` protégée ;
+- **tout en code** : sources de données et dashboards Grafana provisionnés par fichiers, rien n'est configuré à la souris
+- **chaque composant validé par son propre outil** (promtool, amtool, loki, alloy)
+- **des alertes testées** : une panne simulée doit déclencher l'alerte au bon moment
+- **une CI GitHub Actions** sur chaque Pull Request, et une branche `main` protégée
 - **aucun secret dans le dépôt** : identifiants dans un `.env` ignoré par Git.
 
 ## Architecture
@@ -129,13 +129,10 @@ monitoring-stack/
 
 ## Ce que j'en retiens
 
-La stack elle-même m'était familière. Ce lab m'a surtout fait découvrir les
-pratiques qui la rendent reproductible et fiable :
+La stack en elle-même était déjà connue. Ce lab a surtout permis de découvrir
+les pratiques qui la rendent reproductible et fiable :
 
 - **Le provisioning Grafana par fichiers** : après suppression du volume de Grafana, la source de données et le dashboard reviennent à l'identique. La configuration vit dans Git, plus dans des clics.
-- **Chaque composant a son outil de validation** : promtool, amtool, `loki -verify-config`, `alloy fmt`. Je les lance avec `docker compose run`, donc avec exactement les images de la stack.
-- **Les tests unitaires d'alertes**, nouveaux pour moi : `promtool test rules` simule des séries de données et vérifie qu'une alerte reste en pending pendant le délai `for:`, puis passe en firing. J'ai vérifié que le test échoue si je modifie ce délai, sinon il ne prouverait rien.
-- **GitHub Actions et une `main` protégée** : chaque modification passe par une branche, une Pull Request et une CI verte avant d'être fusionnée.
+- **Un outil de validation par composant** : promtool, amtool, `loki -verify-config`, `alloy fmt`. Ils sont lancés avec `docker compose run`, donc avec exactement les images de la stack.
+- **Les tests unitaires d'alertes** : `promtool test rules` simule des séries de données et vérifie qu'une alerte reste en pending pendant le délai `for:`, puis passe en firing. Un test n'a de valeur que s'il peut échouer : modifier ce délai le fait bien échouer.
 - **Modifier un fichier ne suffit pas** : Compose ne recrée pas un conteneur quand seul le contenu d'un fichier monté change, et Prometheus ne relit sa configuration qu'au démarrage ou sur SIGHUP.
-- **Loki indexe des labels, pas du texte** : peu de labels, et des labels stables, pour éviter l'explosion de la cardinalité.
-- **Monter `docker.sock` équivaut à un accès root**, même en lecture seule : à réserver à un agent de confiance, en version épinglée.
