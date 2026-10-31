@@ -4,7 +4,7 @@ Stack de supervision conteneurisée : métriques, logs et alertes.
 
 ## Contexte
 Reproduction en lab personnel de l'approche de supervision mise en place
-en entreprise (Relia Consulting, AGL). Aucun code ni donnée de ces
+en entreprise. Aucun code ni donnée de ces
 employeurs : tout est reconstruit de zéro.
 
 ## Avancement
