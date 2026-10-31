@@ -1,0 +1,18 @@
+---
+route:
+  receiver: defaut
+  group_by: ["alertname", "instance"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: defaut
+# On peut ajouter le canal de communication de notre choix pour recevoir l'alerte (Email, discord,...)
+
+inhibit_rules:
+  - source_matchers:
+      - severity="critical"
+    target_matchers:
+      - severity="warning"
+    equal: ["instance"]
