@@ -1,0 +1,50 @@
+---
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validation de la stack
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v7
+
+      - name: Préparer un .env factice
+        run: cp .env.example .env
+
+      - name: yamllint
+        run: pipx run yamllint .
+
+      - name: Docker Compose
+        run: docker compose config --quiet
+
+      - name: Dashboards Grafana (JSON)
+        run: |
+          for f in grafana/dashboards/*.json; do
+            python3 -m json.tool "$f" > /dev/null
+          done
+
+      - name: Prometheus (configuration et règles)
+        run: docker compose run --rm --no-deps -T --entrypoint promtool prometheus check config /etc/prometheus/prometheus.yml
+
+      - name: Tests unitaires des alertes
+        run: docker compose run --rm --no-deps -T --entrypoint promtool prometheus test rules /etc/prometheus/tests/alerts_test.yml
+
+      - name: Alertmanager
+        run: docker compose run --rm --no-deps -T --entrypoint amtool alertmanager check-config /etc/alertmanager/alertmanager.yml
+
+      - name: Loki
+        run: docker compose run --rm --no-deps -T loki -config.file=/etc/loki/loki.yml -verify-config
+
+      - name: Alloy
+        run: docker compose run --rm --no-deps -T alloy fmt /etc/alloy/config.alloy > /dev/null

@@ -1,0 +1,48 @@
+---
+rule_files:
+  - ../alerts.yml
+
+evaluation_interval: 15s
+
+tests:
+  # Une cible tombe : pending pendant 1 min, puis firing
+  - interval: 15s
+    input_series:
+      - series: 'up{job="node", instance="lab-srv"}'
+        values: "1 1 0 0 0 0 0 0 0 0"
+    alert_rule_test:
+      - eval_time: 30s
+        alertname: CibleInjoignable
+        exp_alerts: []
+      - eval_time: 105s
+        alertname: CibleInjoignable
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              job: node
+              instance: lab-srv
+            exp_annotations:
+              summary: "node injoignable sur lab-srv"
+              description: "Prometheus n'arrive plus à lire la cible node depuis plus d'une minute."
+
+  # RAM à 90 % pendant plus de 5 min : firing
+  - interval: 1m
+    input_series:
+      - series: 'node_memory_MemAvailable_bytes{job="node", instance="lab-srv"}'
+        values: "10x10"
+      - series: 'node_memory_MemTotal_bytes{job="node", instance="lab-srv"}'
+        values: "100x10"
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: MemoireElevee
+        exp_alerts: []
+      - eval_time: 7m
+        alertname: MemoireElevee
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              job: node
+              instance: lab-srv
+            exp_annotations:
+              summary: "RAM utilisée à 90 % sur lab-srv"
+              description: "La mémoire utilisée dépasse 85 % depuis 5 minutes."
